@@ -1,0 +1,17 @@
+[tools]
+node = "latest"
+python = "latest"
+java = "latest"
+go = "latest"
+rust = "stable"
+dotnet = "latest"
+ruby = "latest"
+awscli = { version = "latest", symlink_bins = "true" }
+uv = "latest"
+just = "latest"
+bun = "latest"
+
+[settings]
+
+[settings.ruby]
+compile = false
