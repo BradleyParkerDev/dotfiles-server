@@ -137,6 +137,17 @@ mise install
 mise reshim
 
 # ------------------------------------------------------
+# PM2
+# ------------------------------------------------------
+
+if ! command -v pm2 >/dev/null 2>&1; then
+    echo "Installing PM2..."
+    npm install -g pm2
+else
+    echo "PM2 already installed."
+fi
+
+# ------------------------------------------------------
 # Vite+
 # ------------------------------------------------------
 
@@ -165,16 +176,6 @@ fi
 echo "Enabling Nginx..."
 
 sudo systemctl enable --now nginx
-
-# ------------------------------------------------------
-# Certbot
-# ------------------------------------------------------
-
-echo "Certbot installed."
-echo "Certificates should be requested after DNS is pointed at this server."
-echo ""
-echo "Example:"
-echo "  sudo certbot --nginx -d example.com -d www.example.com"
 
 # ------------------------------------------------------
 # Change default shell
