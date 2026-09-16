@@ -20,7 +20,7 @@ if ! command -v apt >/dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------
-# Validate dotfiles
+# Validate repository structure
 # ------------------------------------------------------
 
 if [[ ! -f "$DOTFILES/.zshrc" ]]; then
@@ -29,7 +29,7 @@ if [[ ! -f "$DOTFILES/.zshrc" ]]; then
 fi
 
 if [[ ! -f "$DOTFILES/.config/mise/config.toml" ]]; then
-    echo "ERROR: mise config not found."
+    echo "ERROR: $DOTFILES/.config/mise/config.toml not found."
     exit 1
 fi
 
@@ -37,7 +37,7 @@ fi
 # System packages
 # ------------------------------------------------------
 
-echo "Updating packages..."
+echo "Updating system packages..."
 
 sudo apt update
 sudo apt upgrade -y
@@ -99,12 +99,14 @@ else
 fi
 
 # ------------------------------------------------------
-# Symlink configs
+# Symlink configuration
 # ------------------------------------------------------
 
 echo "Linking .zshrc..."
 
-ln -sfn "$DOTFILES/.zshrc" "$HOME/.zshrc"
+ln -sfn \
+    "$DOTFILES/.zshrc" \
+    "$HOME/.zshrc"
 
 echo "Linking mise config..."
 
@@ -119,32 +121,44 @@ ln -sfn \
 if [[ ! -x "$HOME/.local/bin/mise" ]] && ! command -v mise >/dev/null 2>&1; then
     echo "Installing mise..."
 
-    curl https://mise.run | sh
+    curl -fsSL https://mise.run | sh
+else
+    echo "mise already installed."
 fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
 eval "$(mise activate bash)"
 
-echo "Trusting mise config..."
+echo "Trusting mise configuration..."
 
 mise trust "$DOTFILES/.config/mise/config.toml" || true
 mise trust "$HOME/.config/mise/config.toml" || true
 
 echo "Installing mise runtimes..."
 
-mise install
-mise reshim
+if ! mise install; then
+    echo ""
+    echo "WARNING: One or more mise runtimes failed to install."
+    echo "Continuing with the rest of the bootstrap."
+    echo ""
+fi
+
+mise reshim || true
 
 # ------------------------------------------------------
 # PM2
 # ------------------------------------------------------
 
-if ! command -v pm2 >/dev/null 2>&1; then
-    echo "Installing PM2..."
-    npm install -g pm2
+if command -v npm >/dev/null 2>&1; then
+    if ! command -v pm2 >/dev/null 2>&1; then
+        echo "Installing PM2..."
+        npm install -g pm2
+    else
+        echo "PM2 already installed."
+    fi
 else
-    echo "PM2 already installed."
+    echo "WARNING: npm is unavailable. Skipping PM2 installation."
 fi
 
 # ------------------------------------------------------
@@ -165,7 +179,7 @@ if [[ -f "$HOME/.vite-plus/env" ]]; then
 fi
 
 if command -v vp >/dev/null 2>&1; then
-    echo "Letting mise manage Node.js..."
+    echo "Configuring Vite+ to use the mise-managed Node.js runtime..."
     vp env off || true
 fi
 
@@ -186,6 +200,8 @@ ZSH_PATH="$(command -v zsh)"
 if [[ "$SHELL" != "$ZSH_PATH" ]]; then
     echo "Changing login shell to Zsh..."
     chsh -s "$ZSH_PATH"
+else
+    echo "Zsh is already the default shell."
 fi
 
 # ------------------------------------------------------
@@ -214,5 +230,6 @@ echo "  mise list"
 echo "  nginx -v"
 echo "  certbot --version"
 echo "  zsh --version"
+echo "  pm2 --version"
 echo "  vp --version"
 echo ""
