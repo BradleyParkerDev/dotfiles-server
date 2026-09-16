@@ -42,6 +42,6 @@ export APPS="/var/www/apps"
 # Vite+
 # ------------------------------------------------------
 
-if [[ -f "$HOME/.vite-plus/env" ]]; then
-    source "$HOME/.vite-plus/env"
+if [[ -f "$HOME/.config/vite-plus/env" ]]; then
+    source "$HOME/.config/vite-plus/env"
 fi
